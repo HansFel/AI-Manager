@@ -1,0 +1,18 @@
+workspace:
+  name: ai-management-hub
+  registry_path: .ai-management/registry.json
+  secrets_policy: keep-out-of-git
+
+devices:
+  - id: win11-main
+    os: windows
+    shell: powershell
+    python: python
+  - id: wsl-main
+    os: linux
+    shell: bash
+    python: python3
+  - id: mint-main
+    os: linux
+    shell: bash
+    python: python3

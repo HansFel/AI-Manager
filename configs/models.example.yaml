@@ -1,0 +1,33 @@
+models:
+  - id: gpt-main
+    provider: openai
+    display_name: Primary GPT model
+    roles: [planner, coder, reviewer]
+    priority: 10
+    enabled: true
+  - id: claude-main
+    provider: anthropic
+    display_name: Primary Claude model
+    roles: [writer, reviewer, planner]
+    priority: 8
+    enabled: true
+  - id: gemini-main
+    provider: google
+    display_name: Primary Gemini model
+    roles: [researcher, long_context]
+    priority: 7
+    enabled: true
+  - id: local-main
+    provider: local
+    display_name: Local model
+    roles: [private, offline, draft]
+    priority: 5
+    enabled: true
+
+routing:
+  default_role: planner
+  fallback_order:
+    - gpt-main
+    - claude-main
+    - gemini-main
+    - local-main
