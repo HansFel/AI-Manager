@@ -16,6 +16,7 @@ Textformaten:
 
 - `configs/*.yaml` fuer Modelle und Geraeteprofile
 - `.ai-management/registry.json` fuer Agents, Skills und Fingerprints
+- `.ai-management/users.local.json` fuer lokale Webbenutzer ohne Git-Sync
 - spaeter `agents/`, `skills/`, `runs/` fuer konkrete Artefakte
 
 ### 2. Registry
@@ -74,6 +75,18 @@ Geraeteprofilen abgelegt:
 - Pfade: Windows-Pfade vs. Linux-Pfade
 - Runtime: lokale Python-Version, Docker, WSL
 - Secret-Quelle: `.env`, Keychain, pass, 1Password oder System-ENV
+
+## Weboberflaeche
+
+Die Startversion nutzt FastAPI mit serverseitiger Session. Ohne Anmeldung leiten
+geschuetzte Seiten auf `/login` um. Der lokale User-Store verwendet
+PBKDF2-SHA256-Hashes und wird bewusst nicht versioniert.
+
+Erste Seiten:
+
+- `/` Dashboard mit Modell-, Agent-, Skill- und Duplikatstatus
+- `/registry` Pruefung und Anlage von Agents/Skills
+- `/models` Modellrollen und Routing-Auszug
 
 ## Grundregel gegen Doppelgleisigkeit
 

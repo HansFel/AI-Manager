@@ -9,6 +9,7 @@ from rich.table import Table
 
 from .models import EntryKind, ModelsFile
 from .registry import RegistryStore, fingerprint
+from .security import UserStore
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
@@ -118,6 +119,42 @@ def duplicates(
         for entry, score in group:
             table.add_row(entry.kind, entry.name, f"{score:.2f}", entry.fingerprint)
         console.print(table)
+
+
+@app.command("create-user")
+def create_user(
+    username: str = typer.Option("admin", "--username", "-u"),
+    password: str = typer.Option(
+        ...,
+        "--password",
+        "-p",
+        prompt=True,
+        hide_input=True,
+        confirmation_prompt=True,
+    ),
+    role: str = typer.Option("admin", "--role", "-r"),
+    users: Path = typer.Option(Path(".ai-management/users.local.json")),
+) -> None:
+    """Create or update a local web user."""
+    store = UserStore(users)
+    created = store.upsert_user(username=username, password=password, role=role)
+    if created:
+        console.print(f"[green]Created user:[/] {username}")
+    else:
+        console.print(f"[yellow]Updated user:[/] {username}")
+
+
+@app.command()
+def web(
+    host: str = typer.Option("127.0.0.1", "--host"),
+    port: int = typer.Option(8765, "--port"),
+    reload: bool = typer.Option(False, "--reload"),
+) -> None:
+    """Start the local web management UI."""
+    import uvicorn
+
+    console.print(f"[green]Starting AI Management Hub:[/] http://{host}:{port}")
+    uvicorn.run("ai_management.web:app", host=host, port=port, reload=reload)
 
 
 def _print_matches(matches) -> None:

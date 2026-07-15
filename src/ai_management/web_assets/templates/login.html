@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Anmeldung · AI Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/app.css') }}">
+  </head>
+  <body class="login-body">
+    <main class="login-panel">
+      <div class="brand login-brand">
+        <span class="brand-mark">AI</span>
+        <span>
+          <strong>AI Manager</strong>
+          <small>Lokale Anmeldung</small>
+        </span>
+      </div>
+      {% if not has_users %}
+        <div class="notice">
+          Noch kein Benutzer vorhanden. Lege zuerst einen Admin an:
+          <code>python -m ai_management.cli create-user --username admin</code>
+        </div>
+      {% endif %}
+      {% if error %}
+        <div class="error">{{ error }}</div>
+      {% endif %}
+      <form method="post" action="/login" class="form-stack">
+        <label>
+          Benutzer
+          <input name="username" autocomplete="username" required>
+        </label>
+        <label>
+          Passwort
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit">Anmelden</button>
+      </form>
+    </main>
+  </body>
+</html>

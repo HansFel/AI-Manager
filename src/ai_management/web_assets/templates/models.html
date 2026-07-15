@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Modelle · AI Manager{% endblock %}
+{% block heading %}Modelle{% endblock %}
+{% block subheading %}Rollen und Prioritaeten fuer das Zusammenspiel der Modelle.{% endblock %}
+{% block content %}
+  <section class="panel">
+    <header class="panel-head">
+      <h2>Konfigurierte Modelle</h2>
+      <span>{{ models|length }} aktiv konfiguriert</span>
+    </header>
+    <table>
+      <thead><tr><th>ID</th><th>Provider</th><th>Name</th><th>Rollen</th><th>Prioritaet</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for model in models %}
+          <tr>
+            <td>{{ model.id }}</td>
+            <td>{{ model.provider }}</td>
+            <td>{{ model.display_name }}</td>
+            <td>{{ model.roles|join(", ") }}</td>
+            <td>{{ model.priority }}</td>
+            <td>{{ "aktiv" if model.enabled else "aus" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel narrow">
+    <header class="panel-head">
+      <h2>Routing</h2>
+    </header>
+    <pre>{{ routing }}</pre>
+  </section>
+{% endblock %}

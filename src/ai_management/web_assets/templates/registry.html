@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Registry · AI Manager{% endblock %}
+{% block heading %}Registry{% endblock %}
+{% block subheading %}Agents und Skills erst pruefen, dann anlegen.{% endblock %}
+{% block content %}
+  <section class="grid two">
+    <div class="panel">
+      <header class="panel-head">
+        <h2>Neuen Eintrag pruefen</h2>
+      </header>
+      {% if created %}
+        <div class="ok-line">Angelegt: {{ created.name }}</div>
+      {% endif %}
+      <form method="post" action="/registry/check" class="form-grid">
+        <label>
+          Typ
+          <select name="kind">
+            <option value="skill">Skill</option>
+            <option value="agent">Agent</option>
+          </select>
+        </label>
+        <label>
+          Name
+          <input name="name" required>
+        </label>
+        <label class="full">
+          Beschreibung
+          <textarea name="description" rows="4"></textarea>
+        </label>
+        <label class="full">
+          Tags
+          <input name="tags" placeholder="repo, deploy, review">
+        </label>
+        <button type="submit">Pruefen</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <header class="panel-head">
+        <h2>Pruefergebnis</h2>
+      </header>
+      {% if candidate %}
+        {% if matches %}
+          <div class="warning-line">Moegliche Ueberschneidung gefunden. Besser vorhandenen Eintrag erweitern.</div>
+          <table>
+            <thead><tr><th>Typ</th><th>Name</th><th>Score</th></tr></thead>
+            <tbody>
+              {% for entry, score in matches %}
+                <tr><td>{{ entry.kind }}</td><td>{{ entry.name }}</td><td>{{ "%.2f"|format(score) }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="ok-line">Keine naheliegende Doppelung gefunden.</div>
+        {% endif %}
+        <form method="post" action="/registry/create" class="inline-form">
+          <input type="hidden" name="kind" value="{{ candidate.kind }}">
+          <input type="hidden" name="name" value="{{ candidate.name }}">
+          <input type="hidden" name="description" value="{{ candidate.description }}">
+          <input type="hidden" name="tags" value="{{ candidate.tags }}">
+          <button type="submit">Trotzdem anlegen</button>
+        </form>
+      {% else %}
+        <p class="muted">Noch keine Pruefung ausgefuehrt.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <header class="panel-head">
+      <h2>Eintraege</h2>
+      <span>{{ registry.entries|length }} gesamt</span>
+    </header>
+    <table>
+      <thead><tr><th>Typ</th><th>Name</th><th>Beschreibung</th><th>Fingerprint</th></tr></thead>
+      <tbody>
+        {% for entry in registry.entries %}
+          <tr>
+            <td>{{ entry.kind }}</td>
+            <td>{{ entry.name }}</td>
+            <td>{{ entry.description }}</td>
+            <td class="mono">{{ entry.fingerprint }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">Noch keine Eintraege.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

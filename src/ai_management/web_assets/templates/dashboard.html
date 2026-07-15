@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · AI Manager{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block subheading %}Ueberblick ueber Modelle, Agents, Skills und Doppelungen.{% endblock %}
+{% block content %}
+  <section class="metrics">
+    <div class="metric">
+      <span>Modelle</span>
+      <strong>{{ models|length }}</strong>
+    </div>
+    <div class="metric">
+      <span>Agents</span>
+      <strong>{{ agents|length }}</strong>
+    </div>
+    <div class="metric">
+      <span>Skills</span>
+      <strong>{{ skills|length }}</strong>
+    </div>
+    <div class="metric warn">
+      <span>Doppelungen</span>
+      <strong>{{ duplicate_groups|length }}</strong>
+    </div>
+  </section>
+
+  <section class="grid two">
+    <div class="panel">
+      <header class="panel-head">
+        <h2>Aktive Modellrollen</h2>
+        <a href="/models">Details</a>
+      </header>
+      <table>
+        <thead><tr><th>ID</th><th>Provider</th><th>Rollen</th></tr></thead>
+        <tbody>
+          {% for model in models %}
+            <tr>
+              <td>{{ model.id }}</td>
+              <td>{{ model.provider }}</td>
+              <td>{{ model.roles|join(", ") }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <header class="panel-head">
+        <h2>Registry Status</h2>
+        <a href="/registry">Bearbeiten</a>
+      </header>
+      {% if duplicate_groups %}
+        <div class="warning-line">Es gibt moegliche Doppelungen. Bitte pruefen, bevor neue Skills entstehen.</div>
+      {% else %}
+        <div class="ok-line">Keine Doppelgruppen gefunden.</div>
+      {% endif %}
+      <table>
+        <thead><tr><th>Typ</th><th>Name</th><th>Tags</th></tr></thead>
+        <tbody>
+          {% for entry in registry.entries[:8] %}
+            <tr>
+              <td>{{ entry.kind }}</td>
+              <td>{{ entry.name }}</td>
+              <td>{{ entry.tags|join(", ") }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="3">Noch keine Registry-Eintraege.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

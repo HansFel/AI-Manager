@@ -5,6 +5,7 @@ __pycache__/
 .env.*
 !.env.example
 .ai-management/*.local.json
+.ai-management/*.local.key
 .pytest_cache/
 dist/
 build/
