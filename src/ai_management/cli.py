@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from .models import EntryKind, ModelsFile
+from .projects import ProjectStore
 from .registry import RegistryStore, fingerprint
 from .security import UserStore
 
@@ -19,16 +20,26 @@ def store(path: Path) -> RegistryStore:
     return RegistryStore(path)
 
 
+def project_store(path: Path) -> ProjectStore:
+    return ProjectStore(path)
+
+
 @app.command()
 def init(
     registry: Path = typer.Option(Path(".ai-management/registry.json"), help="Registry path."),
+    projects: Path = typer.Option(Path(".ai-management/projects.json"), help="Projects catalog path."),
 ) -> None:
-    """Create the local registry."""
+    """Create the local registry and project catalog."""
     created = store(registry).init()
+    projects_created = project_store(projects).init()
     if created:
         console.print(f"[green]Created registry:[/] {registry}")
     else:
         console.print(f"[yellow]Registry already exists:[/] {registry}")
+    if projects_created:
+        console.print(f"[green]Created projects catalog:[/] {projects}")
+    else:
+        console.print(f"[yellow]Projects catalog already exists:[/] {projects}")
 
 
 @app.command()
@@ -119,6 +130,79 @@ def duplicates(
         for entry, score in group:
             table.add_row(entry.kind, entry.name, f"{score:.2f}", entry.fingerprint)
         console.print(table)
+
+
+@app.command("register-project")
+def register_project(
+    name: str,
+    repo_url: str = typer.Option("", "--repo-url"),
+    local_path: str = typer.Option("", "--local-path"),
+    description: str = typer.Option("", "--description", "-d"),
+    tag: list[str] = typer.Option([], "--tag", "-t"),
+    owner: str = typer.Option("", "--owner"),
+    projects: Path = typer.Option(Path(".ai-management/projects.json")),
+) -> None:
+    """Register a repository or project."""
+    entry = project_store(projects).add_project(
+        name=name,
+        repo_url=repo_url,
+        local_path=local_path,
+        description=description,
+        tags=tag,
+        owner=owner,
+    )
+    console.print(f"[green]Registered project:[/] {entry.name}")
+
+
+@app.command("register-commonality")
+def register_commonality(
+    title: str,
+    category: str = typer.Option("shared", "--category", "-c"),
+    description: str = typer.Option("", "--description", "-d"),
+    project_id: list[str] = typer.Option([], "--project-id"),
+    tag: list[str] = typer.Option([], "--tag", "-t"),
+    projects: Path = typer.Option(Path(".ai-management/projects.json")),
+) -> None:
+    """Register a shared concern across repositories."""
+    entry = project_store(projects).add_commonality(
+        title=title,
+        category=category,
+        description=description,
+        project_ids=project_id,
+        tags=tag,
+    )
+    console.print(f"[green]Registered commonality:[/] {entry.title}")
+
+
+@app.command("projects")
+def projects_list(
+    projects: Path = typer.Option(Path(".ai-management/projects.json")),
+) -> None:
+    """Show registered projects and shared concerns."""
+    catalog = project_store(projects).load()
+    table = Table(title="Projects")
+    table.add_column("ID")
+    table.add_column("Name")
+    table.add_column("Repo")
+    table.add_column("Tags")
+    for project in catalog.projects:
+        table.add_row(project.id[:8], project.name, project.repo_url, ", ".join(project.tags))
+    console.print(table)
+
+    shared = Table(title="Commonalities")
+    shared.add_column("ID")
+    shared.add_column("Title")
+    shared.add_column("Category")
+    shared.add_column("Projects")
+    names = {project.id: project.name for project in catalog.projects}
+    for item in catalog.commonalities:
+        shared.add_row(
+            item.id[:8],
+            item.title,
+            item.category,
+            ", ".join(names.get(project_id, project_id[:8]) for project_id in item.project_ids),
+        )
+    console.print(shared)
 
 
 @app.command("create-user")

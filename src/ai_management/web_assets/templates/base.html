@@ -18,6 +18,7 @@
         </div>
         <nav class="nav">
           <a href="/" class="{{ 'active' if request.url.path == '/' else '' }}">Dashboard</a>
+          <a href="/projects" class="{{ 'active' if request.url.path == '/projects' else '' }}">Projekte</a>
           <a href="/registry" class="{{ 'active' if request.url.path == '/registry' else '' }}">Registry</a>
           <a href="/models" class="{{ 'active' if request.url.path == '/models' else '' }}">Modelle</a>
         </nav>
@@ -29,7 +30,7 @@
             <p>{% block subheading %}Agents, Skills und Modelle gemeinsam steuern.{% endblock %}</p>
           </div>
           <form method="post" action="/logout">
-            <span class="user-pill">{{ user.username }} · {{ user.role }}</span>
+            <span class="user-pill">{{ user.username }} &middot; {{ user.role }}</span>
             <button type="submit" class="ghost-button">Abmelden</button>
           </form>
         </header>

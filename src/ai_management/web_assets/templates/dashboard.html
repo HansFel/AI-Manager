@@ -5,6 +5,10 @@
 {% block content %}
   <section class="metrics">
     <div class="metric">
+      <span>Projekte</span>
+      <strong>{{ catalog.projects|length }}</strong>
+    </div>
+    <div class="metric">
       <span>Modelle</span>
       <strong>{{ models|length }}</strong>
     </div>
@@ -17,12 +21,32 @@
       <strong>{{ skills|length }}</strong>
     </div>
     <div class="metric warn">
-      <span>Doppelungen</span>
-      <strong>{{ duplicate_groups|length }}</strong>
+      <span>Gemeinsamkeiten</span>
+      <strong>{{ catalog.commonalities|length }}</strong>
     </div>
   </section>
 
   <section class="grid two">
+    <div class="panel">
+      <header class="panel-head">
+        <h2>Projekte</h2>
+        <a href="/projects">Verwalten</a>
+      </header>
+      <table>
+        <thead><tr><th>Name</th><th>Repo</th><th>Tags</th></tr></thead>
+        <tbody>
+          {% for project in catalog.projects[:6] %}
+            <tr>
+              <td>{{ project.name }}</td>
+              <td>{{ project.repo_url }}</td>
+              <td>{{ project.tags|join(", ") }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="3">Noch keine Projekte eingetragen.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
     <div class="panel">
       <header class="panel-head">
         <h2>Aktive Modellrollen</h2>
@@ -62,6 +86,30 @@
             </tr>
           {% else %}
             <tr><td colspan="3">Noch keine Registry-Eintraege.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <header class="panel-head">
+        <h2>Gemeinsamkeiten</h2>
+        <a href="/projects">Pflegen</a>
+      </header>
+      <table>
+        <thead><tr><th>Titel</th><th>Kategorie</th><th>Projekte</th></tr></thead>
+        <tbody>
+          {% for item in catalog.commonalities[:6] %}
+            <tr>
+              <td>{{ item.title }}</td>
+              <td>{{ item.category }}</td>
+              <td>
+                {% for project_id in item.project_ids %}
+                  {{ project_names.get(project_id, project_id[:8]) }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="3">Noch keine gemeinsamen Bausteine gepflegt.</td></tr>
           {% endfor %}
         </tbody>
       </table>

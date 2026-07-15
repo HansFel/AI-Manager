@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Projekte · AI Manager{% endblock %}
+{% block heading %}Projekte{% endblock %}
+{% block subheading %}Repos auswaehlen und gemeinsame Bausteine zwischen ihnen verwalten.{% endblock %}
+{% block content %}
+  <section class="grid two">
+    <div class="panel">
+      <header class="panel-head">
+        <h2>Projekt anlegen</h2>
+      </header>
+      {% if created_project %}
+        <div class="ok-line">Projekt angelegt: {{ created_project.name }}</div>
+      {% endif %}
+      <form method="post" action="/projects/create" class="form-grid">
+        <label>
+          Name
+          <input name="name" required placeholder="AgroBetrieb">
+        </label>
+        <label>
+          Status
+          <select name="status">
+            <option value="active">aktiv</option>
+            <option value="paused">pausiert</option>
+            <option value="archived">archiviert</option>
+          </select>
+        </label>
+        <label class="full">
+          Git-Repo
+          <input name="repo_url" placeholder="https://github.com/HansFel/AI-Manager.git">
+        </label>
+        <label class="full">
+          Lokaler Pfad
+          <input name="local_path" placeholder="C:\Users\HTFel\OneDrive\... oder /home/hans/...">
+        </label>
+        <label>
+          Owner
+          <input name="owner" placeholder="HansFel">
+        </label>
+        <label>
+          Tags
+          <input name="tags" placeholder="fastapi, docker, nas">
+        </label>
+        <label class="full">
+          Beschreibung
+          <textarea name="description" rows="4"></textarea>
+        </label>
+        <button type="submit">Projekt speichern</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <header class="panel-head">
+        <h2>Gemeinsamkeit anlegen</h2>
+      </header>
+      {% if created_commonality %}
+        <div class="ok-line">Gemeinsamkeit angelegt: {{ created_commonality.title }}</div>
+      {% endif %}
+      <form method="post" action="/projects/commonalities/create" class="form-grid">
+        <label class="full">
+          Titel
+          <input name="title" required placeholder="Docker Deploy ueber UGREEN NAS">
+        </label>
+        <label>
+          Kategorie
+          <select name="category">
+            <option value="deployment">Deployment</option>
+            <option value="auth">Auth</option>
+            <option value="data-model">Datenmodell</option>
+            <option value="skill">Skill</option>
+            <option value="runtime">Runtime</option>
+            <option value="shared">Sonstiges</option>
+          </select>
+        </label>
+        <label>
+          Tags
+          <input name="tags" placeholder="docker, traefik, secrets">
+        </label>
+        <label class="full">
+          Projekte
+          <select name="project_ids" multiple size="6">
+            {% for project in catalog.projects %}
+              <option value="{{ project.id }}">{{ project.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="full">
+          Beschreibung
+          <textarea name="description" rows="4"></textarea>
+        </label>
+        <button type="submit">Gemeinsamkeit speichern</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header class="panel-head">
+      <h2>Projektliste</h2>
+      <span>{{ catalog.projects|length }} Projekte</span>
+    </header>
+    <table>
+      <thead><tr><th>Name</th><th>Status</th><th>Repo</th><th>Lokaler Pfad</th><th>Tags</th></tr></thead>
+      <tbody>
+        {% for project in catalog.projects %}
+          <tr>
+            <td>{{ project.name }}</td>
+            <td>{{ project.status }}</td>
+            <td>{{ project.repo_url }}</td>
+            <td>{{ project.local_path }}</td>
+            <td>{{ project.tags|join(", ") }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5">Noch keine Projekte eingetragen.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <header class="panel-head">
+      <h2>Gemeinsamkeiten</h2>
+      <span>{{ catalog.commonalities|length }} Eintraege</span>
+    </header>
+    <table>
+      <thead><tr><th>Titel</th><th>Kategorie</th><th>Projekte</th><th>Beschreibung</th></tr></thead>
+      <tbody>
+        {% for item in catalog.commonalities %}
+          <tr>
+            <td>{{ item.title }}</td>
+            <td>{{ item.category }}</td>
+            <td>
+              {% for project_id in item.project_ids %}
+                {{ project_names.get(project_id, project_id[:8]) }}{% if not loop.last %}, {% endif %}
+              {% endfor %}
+            </td>
+            <td>{{ item.description }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">Noch keine Gemeinsamkeiten gepflegt.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

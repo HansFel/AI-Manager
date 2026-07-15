@@ -1,0 +1,15 @@
+services:
+  ai-manager:
+    build: .
+    container_name: ai-manager
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      AIM_DATA_DIR: /data
+      AIM_HOST: 0.0.0.0
+      AIM_PORT: 8765
+      # Nur beim ersten Start setzen, danach entfernen oder leer lassen.
+      # AIM_BOOTSTRAP_ADMIN_PASSWORD: "bitte-aendern"
+    volumes:
+      - ./.ai-management:/data

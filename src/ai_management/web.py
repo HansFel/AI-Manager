@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import yaml
@@ -10,15 +11,18 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from .models import EntryKind, ModelsFile
+from .projects import ProjectStore
 from .registry import RegistryStore, fingerprint
 from .security import UserStore, get_or_create_secret
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 TEMPLATE_DIR = PACKAGE_DIR / "web_assets" / "templates"
 STATIC_DIR = PACKAGE_DIR / "web_assets" / "static"
-REGISTRY_PATH = Path(".ai-management/registry.json")
-USERS_PATH = Path(".ai-management/users.local.json")
-SESSION_KEY_PATH = Path(".ai-management/session.local.key")
+DATA_DIR = Path(os.getenv("AIM_DATA_DIR", ".ai-management"))
+REGISTRY_PATH = DATA_DIR / "registry.json"
+PROJECTS_PATH = DATA_DIR / "projects.json"
+USERS_PATH = DATA_DIR / "users.local.json"
+SESSION_KEY_PATH = DATA_DIR / "session.local.key"
 MODELS_PATH = Path("configs/models.example.yaml")
 
 app = FastAPI(title="AI Management Hub")
@@ -33,6 +37,10 @@ def registry_store() -> RegistryStore:
 
 def user_store() -> UserStore:
     return UserStore(USERS_PATH)
+
+
+def project_store() -> ProjectStore:
+    return ProjectStore(PROJECTS_PATH)
 
 
 def current_user(request: Request) -> dict[str, str] | None:
@@ -62,6 +70,15 @@ def registry_context() -> dict:
         "skills": skills,
         "agents": agents,
         "duplicate_groups": duplicate_groups,
+    }
+
+
+def projects_context() -> dict:
+    catalog = project_store().load()
+    project_names = {project.id: project.name for project in catalog.projects}
+    return {
+        "catalog": catalog,
+        "project_names": project_names,
     }
 
 
@@ -109,6 +126,7 @@ def dashboard(request: Request):
         return user
     models = load_models()
     context = registry_context()
+    project_context = projects_context()
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
@@ -116,6 +134,7 @@ def dashboard(request: Request):
             "request": request,
             "user": user,
             "models": models.models,
+            **project_context,
             **context,
         },
     )
@@ -212,6 +231,92 @@ def models(request: Request):
             "user": user,
             "models": sorted(parsed.models, key=lambda item: item.priority, reverse=True),
             "routing": parsed.routing,
+        },
+    )
+
+
+@app.get("/projects")
+def projects(request: Request):
+    user = require_user(request)
+    if not isinstance(user, dict):
+        return user
+    return templates.TemplateResponse(
+        request=request,
+        name="projects.html",
+        context={
+            "request": request,
+            "user": user,
+            "created_project": None,
+            "created_commonality": None,
+            **projects_context(),
+        },
+    )
+
+
+@app.post("/projects/create")
+def create_project(
+    request: Request,
+    name: str = Form(...),
+    repo_url: str = Form(""),
+    local_path: str = Form(""),
+    description: str = Form(""),
+    tags: str = Form(""),
+    owner: str = Form(""),
+    status: str = Form("active"),
+):
+    user = require_user(request)
+    if not isinstance(user, dict):
+        return user
+    entry = project_store().add_project(
+        name=name,
+        repo_url=repo_url,
+        local_path=local_path,
+        description=description,
+        tags=parse_tags(tags),
+        status=status,
+        owner=owner,
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="projects.html",
+        context={
+            "request": request,
+            "user": user,
+            "created_project": entry,
+            "created_commonality": None,
+            **projects_context(),
+        },
+    )
+
+
+@app.post("/projects/commonalities/create")
+def create_commonality(
+    request: Request,
+    title: str = Form(...),
+    category: str = Form("shared"),
+    description: str = Form(""),
+    project_ids: list[str] = Form([]),
+    tags: str = Form(""),
+):
+    user = require_user(request)
+    if not isinstance(user, dict):
+        return user
+    entry = project_store().add_commonality(
+        title=title,
+        category=category,
+        description=description,
+        project_ids=project_ids,
+        tags=parse_tags(tags),
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="projects.html",
+        context={
+            "request": request,
+            "user": user,
+            "created_project": None,
+            "created_commonality": entry,
+            **projects_context(),
         },
     )
 

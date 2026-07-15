@@ -12,6 +12,8 @@ Mint gleich funktionieren.
 - Eine gemeinsame Registry fuer Modelle, Agents, Skills und Aufgabenmuster.
 - Skills und Agents bekommen Fingerprints, damit Doppelgleisigkeiten frueh
   sichtbar werden.
+- Repos und Projekte werden zentral gepflegt, damit Gemeinsamkeiten wie
+  Deployment, Auth, Datenmodelle und Skills nicht mehrfach entstehen.
 - Modelle werden nach Rollen eingebunden, z.B. Planner, Coder, Reviewer,
   Researcher.
 - Konfiguration bleibt in YAML/JSON und ist Git-freundlich.
@@ -48,6 +50,7 @@ Weitere CLI-Beispiele:
 
 ```powershell
 aim models --config configs/models.example.yaml
+aim register-project "AI Manager" --repo-url "https://github.com/HansFel/AI-Manager.git" --tag fastapi --tag docker
 aim register-skill "lege stall deploy" --description "Deploy workflow fuer Stall-Control"
 aim register-skill "LegeStall deployment" --description "Deployment workflow for stall control"
 aim duplicates
@@ -73,6 +76,23 @@ src/ai_management/        CLI und Kernlogik
 .ai-management/           Lokale Registry, wird per CLI erzeugt
 ```
 
+## Projekte und Gemeinsamkeiten
+
+Die Weboberflaeche hat eine Projektseite. Dort koennen Repos und Projekte
+eingetragen werden, z.B. AgroBetrieb, LegeStallKontrolle, AI-Manager oder
+MGRSoftware. Dazu koennen gemeinsame Bausteine gepflegt werden:
+
+- Deployment-Wege
+- Auth-/Login-Muster
+- Datenmodelle
+- gemeinsame Skills
+- Docker/NAS/Traefik-Runtime
+- wiederverwendbare Entscheidungen
+
+Diese Informationen landen in `.ai-management/projects.json` und koennen ueber
+Git synchronisiert werden. Lokale Benutzer und Session-Schluessel bleiben in
+`.local` Dateien und werden nicht gepusht.
+
 ## Anmeldung
 
 Die Weboberflaeche nutzt lokale Sessions. Benutzer werden nicht ins GitHub-Repo
@@ -85,10 +105,44 @@ python -m ai_management.cli create-user --username admin
 
 Damit kann der lokale Admin spaeter auch ein neues Passwort bekommen.
 
+## Docker
+
+Lokal:
+
+```powershell
+docker compose up -d --build
+```
+
+Beim ersten Containerstart kann ein Admin automatisch angelegt werden:
+
+```powershell
+$env:AIM_BOOTSTRAP_ADMIN_PASSWORD="bitte-aendern"
+docker compose up -d --build
+```
+
+Danach:
+
+```text
+http://127.0.0.1:8765
+```
+
+Das Compose-Volume `./.ai-management:/data` speichert Registry, Projekte,
+Benutzer und Sessions persistent.
+
+## UGREEN NAS
+
+Ja, die Anwendung kann auf einem UGREEN NAS laufen, wenn Docker bzw. Container
+Manager verfuegbar ist. Wichtig: Das NAS muss den Projektordner selbst sehen;
+Windows-Pfade wie `Z:\...` oder OneDrive-Pfade sind fuer den NAS-Docker kein
+gueltiger Build-Kontext.
+
+Siehe [docs/UGREEN_NAS.md](docs/UGREEN_NAS.md).
+
 ## Naechste Ausbaustufen
 
-1. Provider-Adapter fuer die vier genutzten Modelle.
-2. Task-Router, der Aufgaben an passende Agents verteilt.
-3. GitHub-Sync und Geraeteprofile.
-4. Skill-Generator mit Review-Schritt gegen vorhandene Registry.
-5. Rollen/Rechte fuer mehrere Benutzer.
+1. Repo-Scanner fuer lokale Pfade und GitHub-Remotes.
+2. Provider-Adapter fuer die vier genutzten Modelle.
+3. Task-Router, der Aufgaben an passende Agents verteilt.
+4. GitHub-Sync und Geraeteprofile.
+5. Skill-Generator mit Review-Schritt gegen vorhandene Registry.
+6. Rollen/Rechte fuer mehrere Benutzer.

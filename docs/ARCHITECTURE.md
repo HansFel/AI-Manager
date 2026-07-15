@@ -16,6 +16,7 @@ Textformaten:
 
 - `configs/*.yaml` fuer Modelle und Geraeteprofile
 - `.ai-management/registry.json` fuer Agents, Skills und Fingerprints
+- `.ai-management/projects.json` fuer Projekte, Repos und gemeinsame Bausteine
 - `.ai-management/users.local.json` fuer lokale Webbenutzer ohne Git-Sync
 - spaeter `agents/`, `skills/`, `runs/` fuer konkrete Artefakte
 
@@ -32,6 +33,20 @@ Die Registry ist die zentrale Wahrheit fuer:
 Jeder Eintrag erhaelt einen normalisierten Fingerprint. Dadurch kann das System
 erkennen, wenn z.B. `LegeStall deploy`, `stall deploy workflow` und
 `Stall-Control deployment` dieselbe Absicht haben.
+
+### 2b. Projektkatalog
+
+Der Projektkatalog verbindet mehrere Repos. Er speichert:
+
+- Projektname
+- Git-Repo
+- optionaler lokaler Pfad je Geraet
+- Tags und Status
+- gemeinsame Themen zwischen Projekten
+
+Gemeinsamkeiten sind eigenstaendige Eintraege, damit z.B. `Docker Deploy ueber
+UGREEN NAS`, `FastAPI Login`, `Traefik Routing` oder `Buchhaltungs-Kontenlogik`
+nicht in jedem Repo neu erfunden werden.
 
 ### 3. Model Router
 
@@ -85,8 +100,22 @@ PBKDF2-SHA256-Hashes und wird bewusst nicht versioniert.
 Erste Seiten:
 
 - `/` Dashboard mit Modell-, Agent-, Skill- und Duplikatstatus
+- `/projects` Projekt- und Gemeinsamkeitenverwaltung
 - `/registry` Pruefung und Anlage von Agents/Skills
 - `/models` Modellrollen und Routing-Auszug
+
+## Docker/NAS Betrieb
+
+Die Anwendung kann in einem Container laufen. Das Datenverzeichnis ist ueber
+`AIM_DATA_DIR` konfigurierbar und wird im Compose-Setup nach `/data` gelegt.
+
+Auf einem UGREEN NAS gilt:
+
+- Compose/Build-Kontext muss auf dem NAS sichtbar sein.
+- Windows-Mappings wie `Z:\` sind fuer den NAS-Docker nicht direkt gueltig.
+- Benutzer, Sessions, Registry und Projekte sollten ueber ein Volume persistiert
+  werden.
+- Oeffentlicher Zugriff sollte spaeter ueber HTTPS/Reverse Proxy laufen.
 
 ## Grundregel gegen Doppelgleisigkeit
 
